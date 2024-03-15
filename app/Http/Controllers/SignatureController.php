@@ -10,28 +10,33 @@ class SignatureController extends Controller
     public function generate(Request $request)
     {
         try {
-            // Benutzername aus dem Request abrufen
-            $username = $request->input('username');
+            // Gruppe aus dem Request abrufen
+            $gruppe = $request->input('gruppe');
+            
+            $name = $request->input('name');
 
-            // Hochgeladenes Bild verarbeiten
+            // Benutzername aus dem Request abrufen
+            $signatureLink = $request->input('url');
+    
+            // Hochgeladene SVG-Datei verarbeiten
             if ($request->hasFile('file')) {
                 $image = $request->file('file');
-                $imagePath = $image->store('logos', 'public');
-
-                // Lokaler Pfad des Bildes
-                $localImagePath = storage_path('app/public/' . $imagePath);
-
+                $svgContent = file_get_contents($image->getPathname()); // SVG-Inhalt aus der Datei lesen
+    
                 // HTML-Datei für die Outlook-Signatur generieren
                 $htmlContent = "<html><body>";
-                $htmlContent .= "<h1>Outlook-Signatur für $username</h1>";
-                $htmlContent .= "<p>Benutzername: $username</p>";
-                $htmlContent .= "<img src='" . $localImagePath . "' alt='Logo'>";
+                $htmlContent .= "<h1>Outlook-Signatur für die Gruppe: {$gruppe}</h1>";
+                $htmlContent .= "<h2>Name: {$name}</h2>";
+                $htmlContent .= "<a target='_blank' href='{$signatureLink}'>";
+                // SVG-Inhalt einfügen
+                $htmlContent .= $svgContent;
+                $htmlContent .= "</a>";
                 $htmlContent .= "</body></html>";
-
+    
                 // Datei als Antwort senden
                 return response($htmlContent)
                     ->header('Content-Type', 'text/html')
-                    ->header('Content-Disposition', 'attachment; filename="signature.htm"');
+                    ->header('Content-Disposition', "attachment; filename=signature_{$name}_{$gruppe}.htm");
             } else {
                 return response()->json(['error' => 'No file uploaded'], 400);
             }
@@ -39,4 +44,5 @@ class SignatureController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+    
 }
