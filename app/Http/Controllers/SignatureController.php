@@ -12,7 +12,9 @@ class SignatureController extends Controller
         try {
             // Gruppe aus dem Request abrufen
             $gruppe = $request->input('gruppe');
-            
+            if(is_array($gruppe)) {
+                $gruppe = implode(',', $gruppe);
+            }
             $name = $request->input('name');
 
             // Benutzername aus dem Request abrufen
@@ -35,8 +37,8 @@ class SignatureController extends Controller
     
                 // Datei als Antwort senden
                 return response($htmlContent)
-                    ->header('Content-Type', 'text/html')
-                    ->header('Content-Disposition', "attachment; filename=signature_{$name}_{$gruppe}.htm");
+                    ->header('Content-Type', 'text/html');
+                    
             } else {
                 return response()->json(['error' => 'No file uploaded'], 400);
             }
