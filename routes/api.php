@@ -15,3 +15,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/generate', 'App\Http\Controllers\SignatureController@generate');
+
+Route::get('/logs', 'App\Http\Controllers\LogController@index');
