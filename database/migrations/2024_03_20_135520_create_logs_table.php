@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id()->autoIncrement();
             $table->string('gruppe');
             $table->string('name');
-            $table->text('svg_code');
+            $table->text('img');
             $table->timestamps();
         });
     }
