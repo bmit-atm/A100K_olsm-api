@@ -17,3 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/generate', 'App\Http\Controllers\SignatureController@generate');
+
+Route::get('/logs', 'App\Http\Controllers\LogController@index');
+
+Route::get('/all-groups', 'App\Http\Controllers\Auth\AuthenticatedSessionController@getAllGroups');

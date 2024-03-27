@@ -13,6 +13,9 @@ class SignatureController extends Controller
         try {
             // Gruppe aus dem Request abrufen
             $gruppe = $request->input('gruppe');
+
+            $user = $request->input('user');
+
             if(is_array($gruppe)) {
                 $gruppe = implode(',', $gruppe);
             }
@@ -50,6 +53,7 @@ class SignatureController extends Controller
                     $log->gruppe = $gruppe;
                     $log->name = $name;
                     $log->img = $svgBase64; // Speichere den Base64-kodierten SVG-Inhalt
+                    $log->user = $user;
                     $log->save();
                 } catch(\Exception $e){
                     return response()->json(['error' => 'das funktioniert nicht'], 500);
