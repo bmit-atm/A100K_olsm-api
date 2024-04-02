@@ -22,4 +22,9 @@ Route::post('/generate', 'App\Http\Controllers\SignatureController@generate');
 
 Route::get('/logs', 'App\Http\Controllers\LogController@index');
 
+// Route to delete a log
+Route::delete('/logs/{id}', 'App\Http\Controllers\LogController@destroy');
+
+
+
 Route::get('/all-groups', 'App\Http\Controllers\Auth\AuthenticatedSessionController@getAllGroups');

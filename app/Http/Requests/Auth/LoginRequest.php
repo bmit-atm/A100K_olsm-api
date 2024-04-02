@@ -44,7 +44,7 @@ class LoginRequest extends FormRequest
 
         $credentials = [
             //'email' => $this->input('email'),
-            'samaccountname' => $this->username,
+            'uid' => $this->username, // 'uid' => $this->username, or 'samaccountname' => $this->username
             'password' => $this->password,
         
         ];
