@@ -12,6 +12,7 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'login', // Beispiel: URI, für den CSRF-Schutz deaktiviert werden soll
+        'logout', // Weitere URIs, für die CSRF-Schutz deaktiviert werden soll, falls erforderlich
     ];
 }

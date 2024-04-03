@@ -60,15 +60,23 @@ return [
     */
 
     'providers' => [
+        // ...
+    
         'users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            'driver' => 'ldap',
+            'model' => LdapRecord\Models\ActiveDirectory\User::class, // or 'model' => LdapRecord\Models\ActiveDirectory\User::class, for Active Directory
+            'rules' => [],
+            'scopes' => [],
+            'database' => [
+                'model' => App\Models\User::class,
+                'sync_passwords' => false,
+                'sync_attributes' => [
+                    'name' => 'cn',
+                    'username' => 'samaccountname', // or 'uid' for OpenLDAP test, 'samaccountname' for Active Directory
+                    'email' => 'mail',
+                ],
+            ],
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*
