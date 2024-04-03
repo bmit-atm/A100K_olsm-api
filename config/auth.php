@@ -64,7 +64,7 @@ return [
     
         'users' => [
             'driver' => 'ldap',
-            'model' => LdapRecord\Models\OpenLDAP\User::class, // or 'model' => LdapRecord\Models\ActiveDirectory\User::class, for Active Directory
+            'model' => LdapRecord\Models\ActiveDirectory\User::class, // or 'model' => LdapRecord\Models\ActiveDirectory\User::class, for Active Directory
             'rules' => [],
             'scopes' => [],
             'database' => [
@@ -72,7 +72,7 @@ return [
                 'sync_passwords' => false,
                 'sync_attributes' => [
                     'name' => 'cn',
-                    'username' => 'uid', // or 'uid' for OpenLDAP test, 'samaccountname' for Active Directory
+                    'username' => 'samaccountname', // or 'uid' for OpenLDAP test, 'samaccountname' for Active Directory
                     'email' => 'mail',
                 ],
             ],
