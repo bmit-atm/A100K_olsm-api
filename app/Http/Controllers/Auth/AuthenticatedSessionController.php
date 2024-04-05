@@ -9,23 +9,34 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use LdapRecord\Models\ActiveDirectory\Group;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use LdapRecord\Connection;
+use LdapRecord\Container; 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request)
-    {
-        $request->authenticate();
+{
+    $request->authenticate();
 
-        $request->session()->regenerate();
+    $request->session()->regenerate();
 
-        // Generate a JWT and return it in the response
-        $token = JWTAuth::fromUser($request->user());
+    // Generate a JWT and return it in the response
+    $token = JWTAuth::fromUser(Auth::guard('api')->user());
 
-        return response()->json(compact('token'));
+    \Log::info($token);
+    // Validate the token and authenticate the user
+    try {
+        JWTAuth::setToken($token)->authenticate();
+    } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+        // Handle the exception...
+        return response()->json(['error' => 'Failed to authenticate JWT token'], 401);
     }
 
+    return response()->json(compact('token'));
+}
     /**
      * Destroy an authenticated session.
      */
@@ -43,6 +54,29 @@ class AuthenticatedSessionController extends Controller
 
     public function getAllGroups()
     {
+        // Get the existing default connection
+        $connection = Container::getDefaultConnection();
+
+        // Get the currently authenticated user
+        $user = Auth::guard('api')->user();
+        
+        // Get the token from the request
+        $token = JWTAuth::getToken();
+        // Validate the token and authenticate the user
+        try {
+            JWTAuth::setToken($token)->authenticate();
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            // Handle the exception...
+            return response()->json(['error' => 'Failed to authenticate JWT token'], 401);
+        }
+        // Update the connection configuration
+        $connection->setConfiguration([
+            'hosts' => [env('LDAP_HOST', 'ZH-EDU-SRV01.EDU.LAN')],
+            'base_dn' => env('LDAP_BASE_DN', 'dc=EDU,dc=LAN'),
+            'username' => 'signatur.testing@EDU.LAN',
+            'password' => 'Test312.',
+        ]);
+    
         // Fetch all groups from the "Gruppen" OU in the Active Directory
         $groups = Group::in('ou=Gruppen,dc=EDU,dc=LAN')->get();
     

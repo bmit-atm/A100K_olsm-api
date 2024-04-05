@@ -21,7 +21,7 @@ class User extends Authenticatable implements LdapAuthenticatable, JWTSubject
      * @var array<int, string>
      */
     protected $fillable = [
-        'user',
+        'username',
         'name',
         'email',
         'password',

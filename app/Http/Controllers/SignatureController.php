@@ -36,10 +36,10 @@ class SignatureController extends Controller
 
                 // MIME-Typ der Datei abrufen
                 $mimeType = $image->getMimeType();
-                file_put_contents('image_content.log', $imageContent);
+                //file_put_contents('image_content.log', $imageContent);
                 // Inhalt in Base64 kodieren
                 $imageBase64 = base64_encode($imageContent);
-                file_put_contents('mime_type.log', $mimeType);
+                //file_put_contents('mime_type.log', $mimeType);
                 
                 // HTML-Datei für die Outlook-Signatur generieren
                 $htmlContent = "<html><body>";

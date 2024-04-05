@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [
+            'driver' => 'jwt',
+            'provider' => 'users',
+        ],
     ],
 
     /*
@@ -69,11 +73,12 @@ return [
             'scopes' => [],
             'database' => [
                 'model' => App\Models\User::class,
-                'sync_passwords' => false,
+                'sync_passwords' => true,
                 'sync_attributes' => [
                     'name' => 'cn',
                     'username' => 'samaccountname', // or 'uid' for OpenLDAP test, 'samaccountname' for Active Directory
                     'email' => 'mail',
+                    'password' => 'password',
                 ],
             ],
         ],

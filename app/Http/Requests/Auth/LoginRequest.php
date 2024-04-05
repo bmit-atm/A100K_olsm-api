@@ -39,25 +39,38 @@ class LoginRequest extends FormRequest
      * @throws \Illuminate\Validation\ValidationException
      */
     public function authenticate(): void
-    {
-        $this->ensureIsNotRateLimited();
+{
+    $this->ensureIsNotRateLimited();
 
-        $credentials = [
-            //'email' => $this->input('email'),
-            'samaccountname' => $this->username, // 'uid' => $this->username, or 'samaccountname' => $this->username
-            'password' => $this->password,
-        
-        ];
-        if (! Auth::attempt($credentials, $this->filled('remember'))) {
-            RateLimiter::hit($this->throttleKey());
-    
-            throw ValidationException::withMessages([
-                'username' => __('auth.failed'),
-            ]);
-        }
+    $username = $this->input('username') . '@EDU.LAN';
+    $password = $this->input('password');
 
-        RateLimiter::clear($this->throttleKey());
+    // Erstellen Sie eine neue LDAP-Verbindung
+    $connection = new \LdapRecord\Connection([
+        'hosts' => [env('LDAP_HOST')],
+        'port' => env('LDAP_PORT'),
+        'base_dn' => env('LDAP_BASE_DN'),
+        'username' => $username,
+        'password' => $password,
+    ]);
+
+    // Versuchen Sie, sich beim LDAP-Server zu authentifizieren
+    if (! $connection->auth()->attempt($username, $password)) {
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'username' => __('auth.failed'),
+        ]);
     }
+
+    // Erstellen Sie einen lokalen Benutzer mit den gleichen Anmeldeinformationen wie der LDAP-Benutzer
+    $user = \App\Models\User::firstOrCreate(['username' => $this->input('username')]);
+
+    // Melden Sie den Benutzer an
+    Auth::guard('api')->login($user);
+    
+    RateLimiter::clear($this->throttleKey());
+}
 
     /**
      * Ensure the login request is not rate limited.
