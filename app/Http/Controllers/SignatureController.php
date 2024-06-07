@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Log as Log;
+use ZipArchive;
 class SignatureController extends Controller
 {
     
@@ -64,9 +65,24 @@ class SignatureController extends Controller
                     return response()->json(['error' => 'das funktioniert nicht'], 500);
                 }
 
-                // Datei als Antwort senden
-                return response($htmlContent)
-                    ->header('Content-Type', 'text/html');
+                 // Erstellen Sie ein neues ZipArchive-Objekt
+                $zip = new ZipArchive;
+                $zipFileName = tempnam(sys_get_temp_dir(), 'zip');
+                if ($zip->open($zipFileName, ZipArchive::CREATE) === TRUE) {
+                    // Fügen Sie die HTML-Datei zum Archiv hinzu
+                    $zip->addFromString('signature_' . $name .'_' . $gruppe . '.htm', $htmlContent);
+
+                    // Fügen Sie das Bild zum Archiv hinzu
+                    $zip->addFromString('image_' . $name . '_' . $gruppe . '.png', base64_decode($imageBase64));
+
+                    // Schließen Sie das Archiv
+                    $zip->close();
+
+                    // Senden Sie das Archiv als Antwort
+                    return response()->download($zipFileName, 'signature.zip')->deleteFileAfterSend(true);
+                } else {
+                    return response()->json(['error' => 'Failed to create zip archive'], 500);
+                }
             } else {
                 return response()->json(['error' => 'No file uploaded'], 400);
             }

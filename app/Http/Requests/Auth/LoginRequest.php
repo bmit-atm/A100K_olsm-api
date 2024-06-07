@@ -39,38 +39,68 @@ class LoginRequest extends FormRequest
      * @throws \Illuminate\Validation\ValidationException
      */
     public function authenticate(): void
-{
-    $this->ensureIsNotRateLimited();
-
-    $username = $this->input('username') . '@EDU.LAN';
-    $password = $this->input('password');
-
-    // Erstellen Sie eine neue LDAP-Verbindung
-    $connection = new \LdapRecord\Connection([
-        'hosts' => [env('LDAP_HOST')],
-        'port' => env('LDAP_PORT'),
-        'base_dn' => env('LDAP_BASE_DN'),
-        'username' => $username,
-        'password' => $password,
-    ]);
-
-    // Versuchen Sie, sich beim LDAP-Server zu authentifizieren
-    if (! $connection->auth()->attempt($username, $password)) {
-        RateLimiter::hit($this->throttleKey());
-
-        throw ValidationException::withMessages([
-            'username' => __('auth.failed'),
-        ]);
-    }
-
-    // Erstellen Sie einen lokalen Benutzer mit den gleichen Anmeldeinformationen wie der LDAP-Benutzer
-    $user = \App\Models\User::firstOrCreate(['username' => $this->input('username')]);
-
-    // Melden Sie den Benutzer an
-    Auth::guard('api')->login($user);
+    {
+        $this->ensureIsNotRateLimited();
     
-    RateLimiter::clear($this->throttleKey());
-}
+        $username = $this->input('username') . '@EDU.LAN';
+        $password = $this->input('password');
+    
+        // Erstellen Sie eine neue LDAP-Verbindung
+        $connection = new \LdapRecord\Connection([
+            'hosts' => [env('LDAP_HOST')],
+            'port' => env('LDAP_PORT'),
+            'base_dn' => env('LDAP_BASE_DN'),
+            'username' => $username,
+            'password' => $password,
+        ]);
+    
+        // Versuchen Sie, sich beim LDAP-Server zu authentifizieren
+        if (! $connection->auth()->attempt($username, $password)) {
+            RateLimiter::hit($this->throttleKey());
+    
+            throw ValidationException::withMessages([
+                'username' => __('auth.failed'),
+            ]);
+        }
+    
+        // Setzen Sie die Standard-Anmeldeinformationen auf die Anmeldeinformationen des Benutzers
+        \LdapRecord\Container::getDefaultConnection()->setConfiguration([
+            'hosts' => [env('LDAP_HOST')],
+            'port' => env('LDAP_PORT'),
+            'base_dn' => env('LDAP_BASE_DN'),
+            'username' => $username,
+            'password' => $password,
+        ]);
+    
+         // Fetch all groups from the "Gruppen" OU in the Active Directory
+        $groups = \LdapRecord\Models\ActiveDirectory\Group::in('ou=Gruppen,dc=EDU,dc=LAN')->get();
+
+        // Process the groups...
+        $groupNames = [];
+        foreach ($groups as $group) {
+            // Access the 'cn' attribute and add it to the array
+            $groupNames[] = $group->cn[0];
+        }
+
+        // Get all existing groups from the database
+        $existingGroups = \App\Models\AdGroup::all();
+
+        // Delete groups that are not in the Active Directory
+        foreach ($existingGroups as $existingGroup) {
+            if (!in_array($existingGroup->name, $groupNames)) {
+                $existingGroup->delete();
+            }
+        }
+
+        // Add new groups to the database
+        foreach ($groupNames as $groupName) {
+            $group = \App\Models\AdGroup::firstOrCreate(['name' => $groupName]);
+        }
+        // Authentifizieren Sie den Benutzer in Laravel
+        $user = \App\Models\User::where('username', $this->input('username'))->first();
+        Auth::guard('api')->login($user);
+        RateLimiter::clear($this->throttleKey());
+    }
 
     /**
      * Ensure the login request is not rate limited.
